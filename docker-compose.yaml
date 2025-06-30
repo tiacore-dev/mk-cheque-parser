@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    restart: always
+    tty: true
+    stdin_open: true
+
+    ports:
+      - "${PORT}:8000"
+
+    environment:
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - DISPLAY=:99
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    volumes:
+      - type: tmpfs
+        target: /tmp
+
+    command: >
+      sh -c "rm -f /tmp/.X99-lock &&
+             Xvfb :99 -screen 0 1920x1080x24 &
+             gunicorn -c /app/gunicorn.conf.py run:app"
+
+    networks:
+      - parser_network
+
+networks:
+  parser_network:
+    external: true
