@@ -51,13 +51,12 @@ async def build_cheque_json(check_number, name, date, total_price, kkm_name, ite
             }
             for item in cheque_with_items.items
         ]
-        local_date = cheque_with_items.date.astimezone(nsk_tz)
 
         return {
             "cheque_id": cheque_with_items.id,
             "name": cheque_with_items.name,
             "kkt_number": cheque_with_items.kkt_number,
-            "date": local_date.strftime("%d.%m.%Y %H:%M"),
+            "date": cheque_with_items.date.strftime(date),
             "total": float(cheque_with_items.total_price),
             "items": items,
         }
@@ -96,7 +95,7 @@ async def build_cheque_json(check_number, name, date, total_price, kkm_name, ite
         "cheque_id": cheque_id,
         "name": name,  # если фиксировано
         "kkt_number": kkt_number,
-        "date": date_obj,  # или под свой формат
+        "date": cheque.date.strftime(date),
         "total": total,
         "items": items,
     }
