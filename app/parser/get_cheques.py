@@ -16,13 +16,13 @@ from app.parser.parse_cheque import parse_cheque_modal
 from app.parser.parse_to_json import build_cheque_json
 
 
-def fetch_all_cheques(driver, url):
+async def fetch_all_cheques(driver, url):
     wait = WebDriverWait(driver, timeout=30)
 
     logger.info("Переходим на страницу поиска чеков")
     driver.get(f"{url}/web/auth/cheques/search")
 
-    safe_click(driver, "//a[contains(text(), 'вчера')]", "кнопка 'вчера'")
+    safe_click(driver, "//a[contains(text(), 'час')]", "кнопка 'час'")
     logger.info(f"Текущий URL: {driver.current_url}")
     safe_click(driver, "//button[contains(text(), 'Применить')]", "кнопка 'Применить'")
     logger.info(f"Текущий URL: {driver.current_url}")
@@ -56,7 +56,7 @@ def fetch_all_cheques(driver, url):
             continue
 
         # Обработка чеков именно для этой страницы
-        cheques = fetch_cheques(driver)
+        cheques = await fetch_cheques(driver)
         all_cheques.extend(cheques)
 
         if not go_to_next_page(driver):
@@ -69,7 +69,7 @@ def fetch_all_cheques(driver, url):
     return all_cheques
 
 
-def fetch_cheques(driver):
+async def fetch_cheques(driver):
     WebDriverWait(driver, 20).until(
         EC.presence_of_element_located(
             (By.XPATH, "//table[contains(@class, 'table-cheques')]//tbody")
@@ -107,22 +107,7 @@ def fetch_cheques(driver):
             time.sleep(0.5)
             items = parse_cheque_modal(driver)
 
-            # logger.info(
-            #     f"""Чек {check_number} от {date} на сумму {total_price}
-            #     ({kkt_number}), items: {items}"""
-            # )
-
-            # cheque_data.append(
-            #     {
-            #         "check_id": check_number,
-            #         "date": date,
-            #         "kkm_name": kkt_number,
-            #         "total": total_price,
-            #         "url": href,
-            #         "items": items,
-            #     }
-            # )
-            cheque_json = build_cheque_json(
+            cheque_json = await build_cheque_json(
                 check_number=check_number,
                 name=name,
                 date=date,
@@ -130,6 +115,7 @@ def fetch_cheques(driver):
                 kkm_name=kkt_number,
                 items_raw=items,
             )
+            cheque_data.append(cheque_json)
 
             logger.info(f"Собранный чек: {cheque_json}")
 

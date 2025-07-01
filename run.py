@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 
-from app import create_app
+from app.web_app import create_app
 
 load_dotenv()
 
