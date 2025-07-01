@@ -17,6 +17,7 @@ def create_app() -> FastAPI:
         await Tortoise.init(config=TORTOISE_ORM)
 
         Tortoise.init_models(["app.database.models"], "models")
+        await Tortoise.generate_schemas()
 
         yield
 

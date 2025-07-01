@@ -1,9 +1,4 @@
-from dotenv import load_dotenv
-
 from config import Settings
-
-load_dotenv()
-
 
 DATABASE_URL = Settings.DATABASE_URL
 

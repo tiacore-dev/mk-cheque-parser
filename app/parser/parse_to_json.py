@@ -1,9 +1,13 @@
 import re
 from datetime import datetime
 
+import pytz
 from loguru import logger
 
 from app.database.models import Cheque, Item
+
+# Часовой пояс Новосибирска
+nsk_tz = pytz.timezone("Asia/Novosibirsk")
 
 
 def parse_kkt_number(kkm_string):
@@ -12,19 +16,10 @@ def parse_kkt_number(kkm_string):
     return match.group(1) if match else None
 
 
-def parse_price(price_str):
-    """Парсим строку '50 ₽' → 50.0"""
-    return (
-        float(price_str.replace("₽", "").replace(",", ".").strip())
-        if price_str
-        else 0.0
-    )
-
-
 async def build_cheque_json(check_number, name, date, total_price, kkm_name, items_raw):
     cheque_id = check_number
     kkt_number = parse_kkt_number(kkm_name)
-    total = parse_price(total_price)
+    total = total_price
     try:
         date_obj = datetime.strptime(date, "%d.%m.%Y %H:%M")
     except ValueError:
@@ -56,13 +51,15 @@ async def build_cheque_json(check_number, name, date, total_price, kkm_name, ite
             }
             for item in cheque_with_items.items
         ]
+        local_date = cheque_with_items.date.astimezone(nsk_tz)
+
         return {
-            "cheque_id": cheque.id,
-            "name": cheque.name,
-            "kkt_number": cheque.kkt_number,
-            "date": cheque.date,
-            "total": float(cheque.total_price),
-            "items": items,  # или можешь здесь сделать выгрузку из базы, если нужно
+            "cheque_id": cheque_with_items.id,
+            "name": cheque_with_items.name,
+            "kkt_number": cheque_with_items.kkt_number,
+            "date": local_date.strftime("%d.%m.%Y %H:%M"),
+            "total": float(cheque_with_items.total_price),
+            "items": items,
         }
 
     logger.info(f"Чек успешно создан в базе: {cheque.id}")
@@ -73,7 +70,7 @@ async def build_cheque_json(check_number, name, date, total_price, kkm_name, ite
                 if item["quantity"]
                 else 0
             )
-            price_per_unit = parse_price(item["price_per_unit"])
+            price_per_unit = item["price_per_unit"]
             item_obj = await Item.create(
                 id=f"{cheque_id}_{idx}",
                 name=item["name"],

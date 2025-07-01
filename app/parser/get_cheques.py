@@ -1,5 +1,6 @@
 import time
 
+import requests
 from loguru import logger
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -12,8 +13,9 @@ from app.parser.helpers import (
     wait_modal_disappear,
 )
 from app.parser.pagination import go_to_next_page
-from app.parser.parse_cheque import parse_cheque_modal
+from app.parser.parse_cheque import parse_cheque_modal, parse_price
 from app.parser.parse_to_json import build_cheque_json
+from config import Settings
 
 
 async def fetch_all_cheques(driver, url):
@@ -26,6 +28,8 @@ async def fetch_all_cheques(driver, url):
     logger.info(f"Текущий URL: {driver.current_url}")
     safe_click(driver, "//button[contains(text(), 'Применить')]", "кнопка 'Применить'")
     logger.info(f"Текущий URL: {driver.current_url}")
+    logger.info(f"Заголовок страницы: {driver.title}")
+    time.sleep(0.5)
 
     logger.info("Запускаем сбор всех чеков со всех страниц")
     all_cheques = []
@@ -39,7 +43,12 @@ async def fetch_all_cheques(driver, url):
         )
 
         table_xpath = "//table[contains(@class, 'table-cheques')]"
-        wait.until(EC.presence_of_element_located((By.XPATH, table_xpath)))
+        try:
+            wait.until(EC.presence_of_element_located((By.XPATH, table_xpath)))
+        except Exception:
+            logger.info("Таблица чеков не найдена, чеков нет на странице")
+            return all_cheques
+
         logger.info("Таблица чеков загружена")
 
         # ❗ Поиск rows всегда заново, после перехода
@@ -62,6 +71,7 @@ async def fetch_all_cheques(driver, url):
         if not go_to_next_page(driver):
             logger.info("Следующей страницы нет, завершаем")
             break
+        logger.info(f"Чеков собрано с этой страницы: {len(cheques)}")
 
         page_number += 1
 
@@ -81,9 +91,10 @@ async def fetch_cheques(driver):
     rows = driver.find_elements(
         By.XPATH, "//table[contains(@class, 'table-cheques')]//tbody/tr"
     )
-    logger.info(f"Чеков на странице: {len(rows)}")
+    visible_rows = [row for row in rows if row.is_displayed()]
+    logger.info(f"Чеков на странице: {len(visible_rows)}")
 
-    for index, row in enumerate(rows, start=1):
+    for index, row in enumerate(visible_rows, start=1):
         try:
             wait_modal_disappear(driver)
 
@@ -94,13 +105,11 @@ async def fetch_cheques(driver):
             name = tds[2].text.strip() if len(tds) > 2 else "Неизвестно"
             date = tds[3].text.strip() if len(tds) > 3 else "Неизвестно"
 
-            # Номер ККТ
             device_elements = row.find_elements(By.CLASS_NAME, "device-name")
             kkt_number = (
                 device_elements[0].text.strip() if device_elements else "Неизвестно"
             )
 
-            # Сумма — предпоследняя колонка
             total_price = tds[-2].text.strip() if len(tds) >= 2 else "Неизвестно"
 
             safe_click_element(driver, row, description=f"чек {check_number}")
@@ -111,10 +120,23 @@ async def fetch_cheques(driver):
                 check_number=check_number,
                 name=name,
                 date=date,
-                total_price=total_price,
+                total_price=parse_price(total_price),
                 kkm_name=kkt_number,
                 items_raw=items,
             )
+            headers = {"content-type": "application/json"}
+            response = requests.post(
+                url=Settings.SEND_URL, json=cheque_json, headers=headers
+            )
+            if response.ok:
+                logger.info(
+                    f"✅ Отправлено успешно! [{response.status_code}] — {response.text}"
+                )
+            else:
+                logger.warning(
+                    f"⚠️ Ошибка при отправке! [{response.status_code}] — {response.text}"
+                )
+
             cheque_data.append(cheque_json)
 
             logger.info(f"Собранный чек: {cheque_json}")

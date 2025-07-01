@@ -13,6 +13,27 @@ services:
     networks:
       - parser_network
 
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: always
+    tty: true
+    stdin_open: true
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "${PORT}:8000"
+    command: gunicorn -c gunicorn.conf.py run:app
+    environment:
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+    networks:
+      - parser_network
+
   scheduler:
     build:
       context: .
@@ -22,46 +43,23 @@ services:
     stdin_open: true
     depends_on:
       - db
-
-
+      - web
+    env_file:
+      - .env
     environment:
-      - HTTP_PROXY=
-      - HTTPS_PROXY=
       - DISPLAY=:99
-
-
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-
     volumes:
       - type: tmpfs
         target: /tmp
-
-
     networks:
       - parser_network
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    restart: always
-    tty: true
-    stdin_open: true
-    depends_on:
-      - db
-    ports:
-      - "${PORT}:8000"
-
-    environment:
-      - HTTP_PROXY=
-      - HTTPS_PROXY=
 
 
-    networks:
-      - parser_network
 
 
 volumes:

@@ -1,3 +1,5 @@
+import time
+
 from loguru import logger
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
@@ -7,10 +9,29 @@ from selenium.webdriver.support.ui import WebDriverWait
 from app.parser.decorators import retry_on_stale
 
 
+def parse_price(price) -> float:
+    try:
+        if isinstance(price, (int, float)):
+            return float(price)
+
+        if not price:
+            return 0.0
+
+        clean = str(price).replace("₽", "").replace(",", ".").replace(" ", "").strip()
+
+        parsed = float(clean)
+        # logger.info(f"Парсим цену '{price}' → {parsed}")
+        return parsed
+
+    except Exception as e:
+        logger.error(f"Не удалось распарсить цену '{price}': {e}")
+        return 0.0
+
+
 @retry_on_stale()
 def parse_cheque_modal(driver):
     wait = WebDriverWait(driver, 20)
-
+    time.sleep(0.5)
     try:
         wait.until(
             EC.presence_of_element_located(
@@ -64,8 +85,8 @@ def parse_cheque_modal(driver):
                 {
                     "name": name,
                     "quantity": quantity,
-                    "price_per_unit": price_per_unit,
-                    "total": total,
+                    "price_per_unit": parse_price(price_per_unit),
+                    "total": parse_price(total),
                 }
             )
 
