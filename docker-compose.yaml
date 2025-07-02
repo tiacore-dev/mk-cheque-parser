@@ -29,9 +29,9 @@ services:
     stdin_open: true
     env_file:
       - .env
-    depends_on:
-      db:
-        condition: service_healthy
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
     ports:
       - "${PORT}:8000"
     command: gunicorn -c gunicorn.conf.py run:app
@@ -49,9 +49,9 @@ services:
     container_name: scheduler
     tty: true
     stdin_open: true
-    depends_on:
-      db:
-        condition: service_healthy
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
     env_file:
       - .env
     environment:
@@ -70,8 +70,8 @@ services:
 
 
 
-volumes:
-  pgdata:
+# volumes:
+#   pgdata:
 
 networks:
   parser_network:
