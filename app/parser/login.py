@@ -6,27 +6,47 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 def login_to_platform(url, username, password, driver):
-    driver.get(url)
+    logger.info(f"🌐 Открываем страницу {url}")
+    try:
+        driver.get(url)
+    except Exception as e:
+        logger.exception(f"❌ Ошибка при открытии {url}: {e}")
+        raise
 
     wait = WebDriverWait(driver, timeout=30)
-    logger.info(f"Текущий URL: {driver.current_url}")
-    # Нажимаем "Войти"
-    login_button = wait.until(EC.element_to_be_clickable((By.ID, "login_link_id")))
-    login_button.click()
 
-    # Ждём форму входа
-    username_field = wait.until(EC.presence_of_element_located((By.NAME, "username")))
-    password_field = wait.until(EC.presence_of_element_located((By.NAME, "password")))
+    logger.info("🔗 Ожидание кнопки 'Войти'")
+    try:
+        login_button = wait.until(EC.element_to_be_clickable((By.ID, "login_link_id")))
+        logger.info("✅ Кнопка найдена, кликаем")
+        login_button.click()
+    except Exception as e:
+        logger.exception(f"❌ Не удалось найти или нажать кнопку входа: {e}")
+        raise
 
-    username_field.send_keys(username)
-    password_field.send_keys(password)
+    logger.info("⌨️ Ожидание полей для ввода логина и пароля")
+    try:
+        username_field = wait.until(
+            EC.presence_of_element_located((By.NAME, "username"))
+        )
+        password_field = wait.until(
+            EC.presence_of_element_located((By.NAME, "password"))
+        )
+        logger.info("✅ Поля найдены, вводим данные")
+        username_field.send_keys(username)
+        password_field.send_keys(password)
+        password_field.send_keys(Keys.RETURN)
+    except Exception as e:
+        logger.exception(f"❌ Ошибка при вводе логина/пароля: {e}")
+        raise
 
-    password_field.send_keys(Keys.RETURN)
-
-    # Ждём редирект на дашборд
-    wait.until(lambda d: d.current_url.startswith(f"{url}/web/auth/dashboard"))
-
-    logger.info(f"Текущий URL: {driver.current_url}")
-    logger.info(f"Заголовок страницы: {driver.title}")
+    logger.info("⏳ Ожидание перехода на дашборд")
+    try:
+        wait.until(lambda d: d.current_url.startswith(f"{url}/web/auth/dashboard"))
+        logger.info(f"✅ Успешный вход. Текущий URL: {driver.current_url}")
+        logger.info(f"🪧 Заголовок страницы: {driver.title}")
+    except Exception as e:
+        logger.exception(f"❌ Не дождались перехода на дашборд: {e}")
+        raise
 
     return driver
