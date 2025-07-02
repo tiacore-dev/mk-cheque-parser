@@ -10,8 +10,8 @@ from selenium.common.exceptions import (
     StaleElementReferenceException,
     TimeoutException,
 )
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -26,19 +26,20 @@ def clean_html(html):
     return cleaned_html
 
 
-def create_firefox_driver():
-    logger.info("🚗 Попытка запуска Firefox драйвера")
+def create_chrome_driver():
+    logger.info("🚗 Попытка запуска Chrome драйвера")
     try:
         options = Options()
-        options.add_argument("-headless")
+        options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--window-size=1920,1080")
 
-        driver = webdriver.Firefox(options=options)
-        logger.info("✅ Firefox драйвер успешно запущен")
+        driver = webdriver.Chrome(options=options)
+        logger.info("✅ Chrome драйвер успешно запущен")
         return driver
     except Exception as e:
-        logger.error(f"❌Ошибка при создании драйвера Firefox: {e}")
+        logger.exception(f"❌ Ошибка при создании Chrome драйвера: {e}")
         raise
 
 

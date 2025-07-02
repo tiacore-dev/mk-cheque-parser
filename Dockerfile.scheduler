@@ -2,30 +2,22 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Системные зависимости + Firefox + xvfb
+# Установка системных зависимостей + Chromium
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    firefox-esr \
-    xvfb \
-    wget \
-    curl \
-    unzip \
+    chromium \
+    chromium-driver \
     libnss3 \
     libxss1 \
     libasound2 \
     libgtk-3-0 \
     libdbus-glib-1-2 \
+    wget \
+    curl \
+    unzip \
     gcc \
     libpq-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# Установка geckodriver
-RUN GECKODRIVER_VERSION="v0.36.0" && \
-    wget -q "https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
-    tar -xzf "geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
-    rm "geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
-    mv geckodriver /usr/local/bin/ && \
-    chmod +x /usr/local/bin/geckodriver
 
 # Питон-зависимости
 COPY requirements.scheduler.txt .
@@ -34,5 +26,4 @@ RUN pip install --no-cache-dir -r requirements.scheduler.txt
 # Исходный код
 COPY . .
 
-# Запуск
-CMD sh -c "rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1920x1080x24 & python schedule_run.py"
+CMD ["python", "schedule_run.py"]
