@@ -3,7 +3,7 @@ from tortoise import Tortoise
 
 from config import Settings
 
-DATABASE_URL = Settings.DATABASE_URL
+DATABASE_URL = Settings.DATABASE_SCHEDULER_URL
 print(DATABASE_URL)
 
 

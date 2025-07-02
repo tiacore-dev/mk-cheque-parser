@@ -1,6 +1,6 @@
 from config import Settings
 
-DATABASE_URL = Settings.DATABASE_URL
+DATABASE_URL = Settings.DATABASE_WEB_URL
 
 TORTOISE_ORM = {
     "connections": {"default": DATABASE_URL},
