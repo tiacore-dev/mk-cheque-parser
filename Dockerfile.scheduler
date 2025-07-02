@@ -2,20 +2,33 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Установка системных зависимостей + Chromium
+# Системные зависимости + Chromium + ChromeDriver
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     chromium-driver \
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libgtk-3-0 \
-    libdbus-glib-1-2 \
     wget \
     curl \
     unzip \
     gcc \
     libpq-dev \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    libdbus-glib-1-2 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libx11-xcb1 \
+    libxtst6 \
+    libxi6 \
+    libxrender1 \
+    libfontconfig1 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libcups2 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
