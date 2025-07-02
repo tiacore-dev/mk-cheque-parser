@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta, timezone
-
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
 
@@ -13,9 +11,8 @@ scheduler = AsyncIOScheduler(timezone="Asia/Novosibirsk")
 async def start_scheduler():
     scheduler.add_job(
         main_parser,
-        trigger="date",
-        run_date=datetime.now(timezone.utc)
-        + timedelta(seconds=5),  # запуск через 5 секунд
+        trigger="interval",
+        minutes=2,
         id="test_job",
         replace_existing=True,
         args=[Settings.BASE_URL, Settings.LOGIN, Settings.PASSWORD],
