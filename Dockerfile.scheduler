@@ -2,50 +2,39 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Системные зависимости
+# Установка системных зависимостей + Firefox + geckodriver
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    firefox-esr \
     wget \
     curl \
     unzip \
-    gnupg \
-    gcc \
-    libpq-dev \
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libatk-bridge2.0-0 \
+    xvfb \
     libgtk-3-0 \
     libdbus-glib-1-2 \
+    libnss3 \
+    libasound2 \
+    libx11-xcb1 \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    libx11-xcb1 \
+    libxss1 \
     libxtst6 \
     libxi6 \
-    libxrender1 \
-    libfontconfig1 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libcairo2 \
-    libcups2 \
+    fonts-liberation \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Установка конкретной версии Google Chrome
-RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb && \
-    apt-get install -y ./google-chrome-stable_114.0.5735.90-1_amd64.deb && \
-    rm google-chrome-stable_114.0.5735.90-1_amd64.deb
+# Установка geckodriver (последняя стабильная)
+RUN GECKO_VERSION="v0.34.0" && \
+    wget -q "https://github.com/mozilla/geckodriver/releases/download/$GECKO_VERSION/geckodriver-$GECKO_VERSION-linux64.tar.gz" && \
+    tar -xzf "geckodriver-$GECKO_VERSION-linux64.tar.gz" && \
+    rm "geckodriver-$GECKO_VERSION-linux64.tar.gz" && \
+    mv geckodriver /usr/local/bin/ && chmod +x /usr/local/bin/geckodriver
 
-RUN wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip && \
-    unzip chromedriver_linux64.zip && \
-    mv chromedriver /usr/local/bin/ && \
-    chmod +x /usr/local/bin/chromedriver && \
-    rm chromedriver_linux64.zip
-
-
-# Питон-зависимости
+# Установка Python-зависимостей
 COPY requirements.scheduler.txt .
 RUN pip install --no-cache-dir -r requirements.scheduler.txt
 
 COPY . .
 
-CMD ["python", "schedule_run.py"]
+# Запуск с Xvfb
+CMD ["sh", "-c", "rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1920x1080x24 & python schedule_run.py"]

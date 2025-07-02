@@ -46,7 +46,7 @@ services:
       context: .
       dockerfile: Dockerfile.scheduler
     restart: always
-    container_name: scheduler
+    container_name: scheduler-mk
     tty: true
     stdin_open: true
     # depends_on:
