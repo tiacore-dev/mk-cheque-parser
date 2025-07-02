@@ -24,7 +24,7 @@ async def fetch_all_cheques(driver, url):
     logger.info("Переходим на страницу поиска чеков")
     driver.get(f"{url}/web/auth/cheques/search")
 
-    safe_click(driver, "//a[contains(text(), 'вчера')]", "кнопка 'вчера'")
+    safe_click(driver, "//a[contains(text(), 'час')]", "кнопка 'час'")
     logger.info(f"Текущий URL: {driver.current_url}")
     logger.info(f"Заголовок страницы: {driver.title}")
     time.sleep(0.5)

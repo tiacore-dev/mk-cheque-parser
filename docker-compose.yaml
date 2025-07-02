@@ -43,11 +43,6 @@ services:
     network_mode: host
 
 
-
-
-# volumes:
-#   pgdata:
-
 networks:
   parser_network:
     #external: true

@@ -9,14 +9,14 @@ scheduler = BackgroundScheduler()
 
 
 def start_scheduler():
-    scheduler.add_job(
-        main_parser,
-        trigger="interval",
-        minutes=2,
-        id="test_job",
-        replace_existing=True,
-        args=[Settings.BASE_URL, Settings.LOGIN, Settings.PASSWORD],
-    )
+    # scheduler.add_job(
+    #     main_parser,
+    #     trigger="interval",
+    #     minutes=2,
+    #     id="test_job",
+    #     replace_existing=True,
+    #     args=[Settings.BASE_URL, Settings.LOGIN, Settings.PASSWORD],
+    # )
 
     scheduler.add_job(
         main_parser,
