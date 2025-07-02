@@ -11,6 +11,7 @@ from selenium.common.exceptions import (
     TimeoutException,
 )
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -27,20 +28,19 @@ def clean_html(html):
 
 
 def create_chrome_driver():
-    logger.info("🚗 Попытка запуска Chrome драйвера")
-    try:
-        options = Options()
-        options.add_argument("--headless=new")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--window-size=1920,1080")
+    logger.info("Пробуем запустить дрйвер")
+    options = Options()
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--window-size=1920,1080")
+    options.binary_location = "/usr/bin/google-chrome"
 
-        driver = webdriver.Chrome(options=options)
-        logger.info("✅ Chrome драйвер успешно запущен")
-        return driver
-    except Exception as e:
-        logger.exception(f"❌ Ошибка при создании Chrome драйвера: {e}")
-        raise
+    service = Service("/usr/local/bin/chromedriver")
+
+    driver = webdriver.Chrome(service=service, options=options)
+    logger.info("Драйвер запущен")
+    return driver
 
 
 def safe_click(driver, xpath, description="элемент"):
