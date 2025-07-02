@@ -34,9 +34,10 @@ def create_firefox_driver():
         options.add_argument("--disable-dev-shm-usage")
 
         driver = webdriver.Firefox(options=options)
+        logger.info("✅ Chrome драйвер успешно запущен")
         return driver
     except Exception as e:
-        logger.error(f"Ошибка при создании драйвера Firefox: {e}")
+        logger.error(f"❌Ошибка при создании драйвера Firefox: {e}")
         raise
 
 
