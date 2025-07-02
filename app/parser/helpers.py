@@ -27,6 +27,7 @@ def clean_html(html):
 
 
 def create_firefox_driver():
+    logger.info("🚗 Попытка запуска Firefox драйвера")
     try:
         options = Options()
         options.add_argument("-headless")
@@ -34,7 +35,7 @@ def create_firefox_driver():
         options.add_argument("--disable-dev-shm-usage")
 
         driver = webdriver.Firefox(options=options)
-        logger.info("✅ Chrome драйвер успешно запущен")
+        logger.info("✅ Firefox драйвер успешно запущен")
         return driver
     except Exception as e:
         logger.error(f"❌Ошибка при создании драйвера Firefox: {e}")
