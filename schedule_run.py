@@ -2,12 +2,14 @@ import asyncio
 
 from loguru import logger
 
+from app.database.init_orm import init_db
 from app.scheduler import start_scheduler
 
 
 async def main():
     logger.info("🚀 Запуск парсера и планировщика задач")
-    await start_scheduler()
+    await init_db()
+    start_scheduler()
 
     # Просто держим процесс живым
     while True:

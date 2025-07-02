@@ -1,14 +1,14 @@
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from loguru import logger
 
 from app.parser.main_parser import main_parser
 from config import Settings
 
 # Инициализация планировщика с использованием SQLAlchemy для хранения задач
-scheduler = AsyncIOScheduler(timezone="Asia/Novosibirsk")
+scheduler = BackgroundScheduler()
 
 
-async def start_scheduler():
+def start_scheduler():
     scheduler.add_job(
         main_parser,
         trigger="interval",
@@ -29,3 +29,4 @@ async def start_scheduler():
     scheduler.start()
 
     logger.info("Планировщик успешно запущен с задачами из базы.")
+    logger.info(f"Запущенные задачи: {scheduler.get_jobs()}")
