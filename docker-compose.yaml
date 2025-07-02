@@ -3,7 +3,7 @@ services:
   db:
     image: postgres:15
     restart: always
-    container_name: postgres
+    container_name: db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -24,6 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     restart: always
+    container_name: web
     tty: true
     stdin_open: true
     env_file:
@@ -45,6 +46,7 @@ services:
       context: .
       dockerfile: Dockerfile.scheduler
     restart: always
+    container_name: scheduler
     tty: true
     stdin_open: true
     depends_on:
