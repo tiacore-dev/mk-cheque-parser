@@ -31,7 +31,7 @@ async def fetch_all_cheques(driver, url):
     safe_click(driver, "//button[contains(text(), 'Применить')]", "кнопка 'Применить'")
     logger.info(f"Текущий URL: {driver.current_url}")
     logger.info(f"Заголовок страницы: {driver.title}")
-    time.sleep(0.5)
+    time.sleep(1)
 
     logger.info("Запускаем сбор всех чеков со всех страниц")
     all_cheques = []
@@ -40,9 +40,7 @@ async def fetch_all_cheques(driver, url):
     while True:
         logger.info(f"Парсим страницу {page_number}")
 
-        WebDriverWait(driver, 60).until(
-            EC.invisibility_of_element_located((By.CLASS_NAME, "loader_spinner"))
-        )
+        WebDriverWait(driver, 60).until(EC.invisibility_of_element_located((By.CLASS_NAME, "loader_spinner")))
 
         table_xpath = "//table[contains(@class, 'table-cheques')]"
         try:
@@ -82,17 +80,11 @@ async def fetch_all_cheques(driver, url):
 
 
 async def fetch_cheques(driver):
-    WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located(
-            (By.XPATH, "//table[contains(@class, 'table-cheques')]//tbody")
-        )
-    )
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//table[contains(@class, 'table-cheques')]//tbody")))
 
     cheque_data = []
 
-    rows = driver.find_elements(
-        By.XPATH, "//table[contains(@class, 'table-cheques')]//tbody/tr"
-    )
+    rows = driver.find_elements(By.XPATH, "//table[contains(@class, 'table-cheques')]//tbody/tr")
     visible_rows = [row for row in rows if row.is_displayed()]
     logger.info(f"Чеков на странице: {len(visible_rows)}")
 
@@ -108,9 +100,7 @@ async def fetch_cheques(driver):
             date = tds[3].text.strip() if len(tds) > 3 else "Неизвестно"
 
             device_elements = row.find_elements(By.CLASS_NAME, "device-name")
-            kkt_number = (
-                device_elements[0].text.strip() if device_elements else "Неизвестно"
-            )
+            kkt_number = device_elements[0].text.strip() if device_elements else "Неизвестно"
 
             total_price = tds[-2].text.strip() if len(tds) >= 2 else "Неизвестно"
 
@@ -127,17 +117,11 @@ async def fetch_cheques(driver):
                 items_raw=items,
             )
             headers = {"content-type": "application/json"}
-            response = requests.post(
-                url=Settings.SEND_URL, json=cheque_json, headers=headers
-            )
+            response = requests.post(url=Settings.SEND_URL, json=cheque_json, headers=headers)
             if response.ok:
-                logger.info(
-                    f"✅ Отправлено успешно! [{response.status_code}] — {response.text}"
-                )
+                logger.info(f"✅ Отправлено успешно! [{response.status_code}] — {response.text}")
             else:
-                logger.warning(
-                    f"⚠️ Ошибка при отправке! [{response.status_code}] — {response.text}"
-                )
+                logger.warning(f"⚠️ Ошибка при отправке! [{response.status_code}] — {response.text}")
 
             cheque_data.append(cheque_json)
 

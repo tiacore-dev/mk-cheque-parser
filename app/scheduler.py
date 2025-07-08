@@ -5,7 +5,7 @@ from app.parser.main_parser import main_parser
 from config import Settings
 
 # Инициализация планировщика с использованием SQLAlchemy для хранения задач
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(timezone="Asia/Novosibirsk")
 
 
 async def start_scheduler():
