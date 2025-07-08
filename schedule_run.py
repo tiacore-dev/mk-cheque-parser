@@ -9,7 +9,7 @@ from app.scheduler import start_scheduler
 async def main():
     logger.info("🚀 Запуск парсера и планировщика задач")
     await init_db()
-    start_scheduler()
+    await start_scheduler()
 
     # Просто держим процесс живым
     while True:

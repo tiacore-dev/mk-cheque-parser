@@ -1,23 +1,14 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
 
 from app.parser.main_parser import main_parser
 from config import Settings
 
 # Инициализация планировщика с использованием SQLAlchemy для хранения задач
-scheduler = BackgroundScheduler()
+scheduler = AsyncIOScheduler()
 
 
-def start_scheduler():
-    # scheduler.add_job(
-    #     main_parser,
-    #     trigger="interval",
-    #     minutes=2,
-    #     id="test_job",
-    #     replace_existing=True,
-    #     args=[Settings.BASE_URL, Settings.LOGIN, Settings.PASSWORD],
-    # )
-
+async def start_scheduler():
     scheduler.add_job(
         main_parser,
         trigger="cron",

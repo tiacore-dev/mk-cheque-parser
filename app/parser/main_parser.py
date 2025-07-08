@@ -1,4 +1,3 @@
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from loguru import logger
@@ -10,9 +9,9 @@ from app.parser.login import login_to_platform
 executor = ThreadPoolExecutor()
 
 
-def main_parser(url, username, password):
+async def main_parser(url, username, password):
     logger.info("Парсер запущен")
     with selenium_driver() as driver:
         login_to_platform(url, username, password, driver)
-        checks = asyncio.run(fetch_all_cheques(driver, url))  # если fetch async
+        checks = await fetch_all_cheques(driver, url)
         return checks
