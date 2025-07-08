@@ -65,10 +65,7 @@ def parse_cheque_modal(driver):
     for index in range(1, len(rows) + 1):
         try:
             # Всегда берём строку заново, чтобы избежать stale
-            row_xpath = (
-                f"(//div[contains(@class, 'cheque-preview__body')]"
-                f"//table//tbody//tr)[{index}]"
-            )
+            row_xpath = f"(//div[contains(@class, 'cheque-preview__body')]//table//tbody//tr)[{index}]"
             row = driver.find_element(By.XPATH, row_xpath)
 
             cells = row.find_elements(By.TAG_NAME, "td")
