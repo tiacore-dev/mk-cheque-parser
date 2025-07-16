@@ -31,7 +31,7 @@ def parse_price(price) -> float:
 @retry_on_stale()
 def parse_cheque_modal(driver):
     wait = WebDriverWait(driver, 20)
-    time.sleep(0.5)
+    time.sleep(1)
     try:
         wait.until(
             EC.presence_of_element_located(

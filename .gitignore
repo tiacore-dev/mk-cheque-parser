@@ -8,7 +8,7 @@ dispatcher.py
 
 .pylintrc
 testing.py
-
+.vscode
 # Distribution / packaging
 .Python
 build/

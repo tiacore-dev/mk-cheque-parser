@@ -14,7 +14,7 @@ from app.parser.helpers import (
 )
 from app.parser.pagination import go_to_next_page
 from app.parser.parse_cheque import parse_cheque_modal, parse_price
-from app.parser.parse_to_json import build_cheque_json
+from app.parser.parse_to_json import parse_kkt_number, put_to_db
 from config import Settings
 
 
@@ -25,6 +25,7 @@ async def fetch_all_cheques(driver, url):
     driver.get(f"{url}/web/auth/cheques/search")
 
     safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
+    # safe_click(driver, "//a[contains(text(), 'вчера')]", "кнопка 'вчера'")
     logger.info(f"Текущий URL: {driver.current_url}")
     logger.info(f"Заголовок страницы: {driver.title}")
     time.sleep(0.5)
@@ -80,7 +81,9 @@ async def fetch_all_cheques(driver, url):
 
 
 async def fetch_cheques(driver):
-    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//table[contains(@class, 'table-cheques')]//tbody")))
+    WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.XPATH, "//table[contains(@class, 'table-cheques')]//tbody"))
+    )
 
     cheque_data = []
 
@@ -108,22 +111,49 @@ async def fetch_cheques(driver):
             time.sleep(0.5)
             items = parse_cheque_modal(driver)
 
-            cheque_json = await build_cheque_json(
-                check_number=check_number,
-                name=name,
-                date=date,
-                total_price=parse_price(total_price),
-                kkm_name=kkt_number,
-                items_raw=items,
-            )
+            # Фильтруем валидные товары
+            valid_items = [
+                item
+                for item in items
+                if item["name"].strip() and float(item["quantity"]) > 0 and float(item["price_per_unit"]) > 0
+            ]
+
+            # Сумма по позициям
+            items_total = round(sum(float(item["quantity"]) * float(item["price_per_unit"]) for item in valid_items), 2)
+            parsed_total = parse_price(total_price)
+
+            # Проверка всех условий
+            if (
+                len(valid_items) != len(items) or abs(items_total - parsed_total) > 1.0  # можно ужесточить до 0.01
+            ):
+                logger.warning(
+                    f"❌ Чек {check_number} невалиден — позиции: {len(valid_items)}/{len(items)}, "
+                    f"сумма: {items_total} vs {parsed_total}"
+                )
+                close_modal(driver)
+                continue
+
+            cheque_json = {
+                "cheque_id": check_number,
+                "name": name,
+                "kkt_number": parse_kkt_number(kkt_number),
+                "date": date,
+                "total": parse_price(total_price),
+                "items": items,
+            }
+
             headers = {"content-type": "application/json"}
             response = requests.post(url=Settings.SEND_URL, json=cheque_json, headers=headers)
             if response.ok:
                 logger.info(f"✅ Отправлено успешно! [{response.status_code}] — {response.text}")
+                await put_to_db(cheque_json)
+                cheque_data.append(cheque_json)
+                logger.info(f"Чек сохранён: {cheque_json['cheque_id']}")
             else:
                 logger.warning(f"⚠️ Ошибка при отправке! [{response.status_code}] — {response.text}")
+                continue
 
-            cheque_data.append(cheque_json)
+            # cheque_data.append(cheque_json)
 
             logger.info(f"Собранный чек: {cheque_json}")
 
