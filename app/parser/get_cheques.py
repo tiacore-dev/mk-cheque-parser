@@ -162,6 +162,7 @@ async def fetch_cheques(driver):
                 logger.warning(
                     f"❌ Чек {check_number} невалиден — позиции: {len(valid_items)}/{len(items)}, "
                     f"сумма: {items_total} vs {parsed_total}"
+                    f"Данные: kkt: {(parse_kkt_number(kkt_number),)}, date: {date}"
                 )
                 close_modal(driver)
                 continue
