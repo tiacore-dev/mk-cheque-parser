@@ -28,7 +28,7 @@ async def start_scheduler():
     scheduler.add_job(
         main_parser,
         trigger="cron",
-        minute="0,30",
+        minute="10,40",
         id="parse_job",
         replace_existing=True,
         args=[Settings.BASE_URL, Settings.LOGIN, Settings.PASSWORD],
