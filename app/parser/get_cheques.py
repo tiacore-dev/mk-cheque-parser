@@ -25,15 +25,15 @@ from config import Settings
 async def fetch_all_cheques(driver, url):
     wait = WebDriverWait(driver, timeout=30)
 
-    logger.info("Переходим на страницу поиска чеков")
-    # 1) Строим URL с нужными датами
-    # start_datetime = datetime(2025, 8, 27, 14, 45)
-    # end_datetime = datetime(2025, 8, 27, 18, 30)
+    # logger.info("Переходим на страницу поиска чеков")
+    # # 1) Строим URL с нужными датами
+    # start_datetime = datetime(2025, 7, 30, 15, 20)
+    # end_datetime = datetime(2025, 7, 30, 16, 50)
     # search_url = build_cheques_search_url(url, start_datetime, end_datetime)
     # logger.info(f"Переходим на страницу поиска чеков: {search_url}")
     # driver.get(search_url)
 
-    # 2) (Опционально) проверим, что в инпутах действительно нужные значения
+    # # 2) (Опционально) проверим, что в инпутах действительно нужные значения
     # try:
     #     start_val = (
     #         WebDriverWait(driver, 20)
@@ -42,8 +42,8 @@ async def fetch_all_cheques(driver, url):
     #     )
     #     end_val = driver.find_element(By.CSS_SELECTOR, ".js__date_finish input").get_attribute("value")
     #     logger.info(f"Страница прочитала даты: start={start_val}, end={end_val}")
-    # except Exception as e:
-    #     logger.warning(f"Не удалось прочитать значения дат из инпуто: {e}")
+    # except Exception:
+    #     logger.warning("Не удалось прочитать значения дат из инпутов — продолжаем.")
 
     # # 3) Жмём «Применить», чтобы гарантированно обновить выдачу
     # apply_btn_xpath = "//button[contains(text(), 'Применить')]"
@@ -55,6 +55,7 @@ async def fetch_all_cheques(driver, url):
     #     WebDriverWait(driver, 60).until(EC.invisibility_of_element_located((By.CLASS_NAME, "loader_spinner")))
     # except TimeoutException:
     #     logger.warning("Лоадер не исчез за 60с — продолжаем аккуратно")
+    driver.get(f"{url}/web/auth/cheques/search")
 
     safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
     # safe_click(driver, "//a[contains(text(), 'вчера')]", "кнопка 'вчера'")
