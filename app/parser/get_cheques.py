@@ -1,15 +1,15 @@
 import time
-from datetime import datetime
 
 # from datetime import datetime
 import requests
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+
+# from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.parser.dates import build_cheques_search_url
+# from app.parser.dates import build_cheques_search_url
 from app.parser.helpers import (
     close_modal,
     safe_click,
@@ -27,11 +27,11 @@ async def fetch_all_cheques(driver, url):
 
     logger.info("Переходим на страницу поиска чеков")
     # 1) Строим URL с нужными датами
-    start_datetime = datetime(2025, 8, 27, 14, 45)
-    end_datetime = datetime(2025, 8, 27, 18, 30)
-    search_url = build_cheques_search_url(url, start_datetime, end_datetime, device_id="323149")
-    logger.info(f"Переходим на страницу поиска чеков: {search_url}")
-    driver.get(search_url)
+    # start_datetime = datetime(2025, 8, 27, 14, 45)
+    # end_datetime = datetime(2025, 8, 27, 18, 30)
+    # search_url = build_cheques_search_url(url, start_datetime, end_datetime)
+    # logger.info(f"Переходим на страницу поиска чеков: {search_url}")
+    # driver.get(search_url)
 
     # 2) (Опционально) проверим, что в инпутах действительно нужные значения
     # try:
@@ -45,18 +45,18 @@ async def fetch_all_cheques(driver, url):
     # except Exception as e:
     #     logger.warning(f"Не удалось прочитать значения дат из инпуто: {e}")
 
-    # 3) Жмём «Применить», чтобы гарантированно обновить выдачу
-    apply_btn_xpath = "//button[contains(text(), 'Применить')]"
-    wait.until(EC.element_to_be_clickable((By.XPATH, apply_btn_xpath))).click()
-    logger.info("Нажали 'Применить'")
+    # # 3) Жмём «Применить», чтобы гарантированно обновить выдачу
+    # apply_btn_xpath = "//button[contains(text(), 'Применить')]"
+    # wait.until(EC.element_to_be_clickable((By.XPATH, apply_btn_xpath))).click()
+    # logger.info("Нажали 'Применить'")
 
-    # 4) Ждём, пока пропадёт спиннер
-    try:
-        WebDriverWait(driver, 60).until(EC.invisibility_of_element_located((By.CLASS_NAME, "loader_spinner")))
-    except TimeoutException:
-        logger.warning("Лоадер не исчез за 60с — продолжаем аккуратно")
+    # # 4) Ждём, пока пропадёт спиннер
+    # try:
+    #     WebDriverWait(driver, 60).until(EC.invisibility_of_element_located((By.CLASS_NAME, "loader_spinner")))
+    # except TimeoutException:
+    #     logger.warning("Лоадер не исчез за 60с — продолжаем аккуратно")
 
-    # safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
+    safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
     # safe_click(driver, "//a[contains(text(), 'вчера')]", "кнопка 'вчера'")
     logger.info(f"Текущий URL: {driver.current_url}")
     logger.info(f"Заголовок страницы: {driver.title}")
