@@ -29,7 +29,7 @@ async def fetch_all_cheques(driver, url):
     # 1) Строим URL с нужными датами
     start_datetime = datetime(2025, 9, 3, 8, 00)
     end_datetime = datetime(2025, 9, 3, 20, 30)
-    search_url = build_cheques_search_url(url, start_datetime, end_datetime, device_id="326892")
+    search_url = build_cheques_search_url(url, start_datetime, end_datetime, device_id="326865")
     logger.info(f"Переходим на страницу поиска чеков: {search_url}")
     driver.get(search_url)
 
