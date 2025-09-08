@@ -1,6 +1,14 @@
+from enum import Enum
+
 from tortoise import fields
 from tortoise.fields.relational import ReverseRelation
 from tortoise.models import Model
+
+
+class ParseMethod(str, Enum):
+    STANDARD = "standard"
+    YESTERDAY = "yesterday"
+    FILTERED = "filtered"
 
 
 class Cheque(Model):

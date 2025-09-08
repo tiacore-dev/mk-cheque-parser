@@ -1,15 +1,20 @@
 import time
+from typing import Optional
 
 # from datetime import datetime
 import requests
 from loguru import logger
+
+# from datetime import datetime
+from selenium.common.exceptions import TimeoutException
 
 # from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-# from app.parser.dates import build_cheques_search_url
+from app.database.models import ParseMethod
+from app.parser.dates import build_cheques_search_url
 from app.parser.helpers import (
     close_modal,
     safe_click,
@@ -19,50 +24,44 @@ from app.parser.helpers import (
 from app.parser.pagination import go_to_next_page
 from app.parser.parse_cheque import parse_cheque_modal, parse_price
 from app.parser.parse_to_json import parse_kkt_number, put_to_db
+from app.pydantic_models.cheque_models import ChequeFilterSchema
 from config import Settings
 
+# from app.parser.dates import build_cheques_search_url
 
-async def fetch_all_cheques(driver, url):
+
+async def fetch_all_cheques(driver, url, parse_metod: ParseMethod, filters: Optional[ChequeFilterSchema] = None):
     wait = WebDriverWait(driver, timeout=30)
+    match parse_metod:
+        case ParseMethod.FILTERED:
+            logger.info("Переходим на страницу поиска чеков")
+            # 1) Строим URL с нужными датами
 
-    # logger.info("Переходим на страницу поиска чеков")
-    # # 1) Строим URL с нужными датами
-    # start_datetime = datetime(2025, 7, 30, 15, 20)
-    # end_datetime = datetime(2025, 7, 30, 16, 50)
-    # search_url = build_cheques_search_url(url, start_datetime, end_datetime)
-    # logger.info(f"Переходим на страницу поиска чеков: {search_url}")
-    # driver.get(search_url)
+            search_url = build_cheques_search_url(url, filters.date_from, filters.date_to, device_id=filters.device_id)  # type: ignore
+            logger.info(f"Переходим на страницу поиска чеков: {search_url}")
+            driver.get(search_url)
 
-    # # 2) (Опционально) проверим, что в инпутах действительно нужные значения
-    # try:
-    #     start_val = (
-    #         WebDriverWait(driver, 20)
-    #         .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".js__date_start input")))
-    #         .get_attribute("value")
-    #     )
-    #     end_val = driver.find_element(By.CSS_SELECTOR, ".js__date_finish input").get_attribute("value")
-    #     logger.info(f"Страница прочитала даты: start={start_val}, end={end_val}")
-    # except Exception:
-    #     logger.warning("Не удалось прочитать значения дат из инпутов — продолжаем.")
+            # 3) Жмём «Применить», чтобы гарантированно обновить выдачу
+            apply_btn_xpath = "//button[contains(text(), 'Применить')]"
+            wait.until(EC.element_to_be_clickable((By.XPATH, apply_btn_xpath))).click()
+            logger.info("Нажали 'Применить'")
 
-    # # 3) Жмём «Применить», чтобы гарантированно обновить выдачу
-    # apply_btn_xpath = "//button[contains(text(), 'Применить')]"
-    # wait.until(EC.element_to_be_clickable((By.XPATH, apply_btn_xpath))).click()
-    # logger.info("Нажали 'Применить'")
+            # 4) Ждём, пока пропадёт спиннер
+            try:
+                WebDriverWait(driver, 60).until(EC.invisibility_of_element_located((By.CLASS_NAME, "loader_spinner")))
+            except TimeoutException:
+                logger.warning("Лоадер не исчез за 60с — продолжаем аккуратно")
 
-    # # 4) Ждём, пока пропадёт спиннер
-    # try:
-    #     WebDriverWait(driver, 60).until(EC.invisibility_of_element_located((By.CLASS_NAME, "loader_spinner")))
-    # except TimeoutException:
-    #     logger.warning("Лоадер не исчез за 60с — продолжаем аккуратно")
-    driver.get(f"{url}/web/auth/cheques/search")
+        case ParseMethod.STANDARD:
+            driver.get(f"{url}/web/auth/cheques/search")
 
-    # safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
-    safe_click(driver, "//a[contains(text(), 'вчера')]", "кнопка 'вчера'")
-    logger.info(f"Текущий URL: {driver.current_url}")
-    logger.info(f"Заголовок страницы: {driver.title}")
-    time.sleep(0.5)
-    safe_click(driver, "//button[contains(text(), 'Применить')]", "кнопка 'Применить'")
+            safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
+
+            logger.info(f"Текущий URL: {driver.current_url}")
+            logger.info(f"Заголовок страницы: {driver.title}")
+            time.sleep(0.5)
+            safe_click(driver, "//button[contains(text(), 'Применить')]", "кнопка 'Применить'")
+
     logger.info(f"Текущий URL: {driver.current_url}")
     logger.info(f"Заголовок страницы: {driver.title}")
     time.sleep(1)

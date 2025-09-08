@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -13,8 +13,9 @@ class ORMModel(BaseModel):
 
 
 class ChequeFilterSchema(ORMModel):
-    date_from: datetime
-    date_to: datetime
+    date_from: datetime = Field(...)
+    date_to: datetime = Field(...)
+    device_id: Optional[str] = Field(None)
 
 
 class ItemSchema(ORMModel):
