@@ -43,5 +43,5 @@ async def parse_cheques(data: ChequeFilterSchema, _=Depends(check_api_key)):
     logger.info("Парсер запущен")
     with selenium_driver() as driver:
         login_to_platform(Settings.BASE_URL, Settings.LOGIN, Settings.PASSWORD, driver)
-        await fetch_all_cheques(driver, Settings.BASE_URL, ParseMethod.STANDARD)
+        await fetch_all_cheques(driver, Settings.BASE_URL, ParseMethod.FILTERED, data)
         return
