@@ -57,8 +57,8 @@ async def fetch_all_cheques(driver, url):
     #     logger.warning("Лоадер не исчез за 60с — продолжаем аккуратно")
     driver.get(f"{url}/web/auth/cheques/search")
 
-    safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
-    # safe_click(driver, "//a[contains(text(), 'вчера')]", "кнопка 'вчера'")
+    # safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
+    safe_click(driver, "//a[contains(text(), 'вчера')]", "кнопка 'вчера'")
     logger.info(f"Текущий URL: {driver.current_url}")
     logger.info(f"Заголовок страницы: {driver.title}")
     time.sleep(0.5)
