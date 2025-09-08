@@ -13,7 +13,7 @@ services:
     environment:
       HTTP_PROXY: ""
       HTTPS_PROXY: ""
-    networks: [parser_network]
+    network_mode: host
 
   scheduler:
     build:
