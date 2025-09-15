@@ -22,10 +22,7 @@ executor = ThreadPoolExecutor()
 cheque_router = APIRouter()
 
 
-@cheque_router.post(
-    "/cheques",
-    status_code=status.HTTP_204_NO_CONTENT,
-)
+@cheque_router.post("/cheques", response_model=ChequeListResponseSchema)
 async def get_cheques(data: ChequeFilterSchema, _=Depends(check_api_key)):
     query = Q()
 
@@ -38,7 +35,7 @@ async def get_cheques(data: ChequeFilterSchema, _=Depends(check_api_key)):
     return ChequeListResponseSchema(total=total_count, cheques=cheques_list)
 
 
-@cheque_router.post("/parse", response_model=ChequeListResponseSchema)
+@cheque_router.post("/parse", status_code=status.HTTP_204_NO_CONTENT)
 async def parse_cheques(data: ChequeFilterSchema, _=Depends(check_api_key)):
     logger.info("Парсер запущен")
     with selenium_driver() as driver:
