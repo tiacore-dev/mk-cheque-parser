@@ -62,41 +62,16 @@ async def fetch_all_cheques(driver, url, parse_metod: ParseMethod, filters: Opti
             except TimeoutException:
                 logger.warning(f"Не дождались открытия страницы чеков, URL: {driver.current_url}")
 
-            # Если попали в мастер/регистрацию — ждём доп. редирект
+            # Если попали в мастер/регистрацию — сразу открываем страницу чеков напрямую
             if "/web/auth/wizard" in driver.current_url:
-                logger.info("Обнаружен мастер подключений, ждём редирект на страницу чеков")
+                logger.info("Обнаружен мастер подключений, переходим на страницу чеков напрямую")
+                driver.get(f"{url}/web/auth/cheques/search#top")
                 try:
-                    WebDriverWait(driver, 180).until(
+                    WebDriverWait(driver, 60).until(
                         lambda d: d.current_url.startswith(f"{url}/web/auth/cheques/search")
                     )
                 except TimeoutException:
-                    logger.warning(
-                        f"Редирект с мастера не произошёл, пробуем перейти в чеки вручную. URL: {driver.current_url}"
-                    )
-
-                    go_to_cheques_candidates = [
-                        ("//a[contains(@href, '/web/auth/cheques')]", "ссылка на чеки"),
-                        ("//a[contains(@href, '/cheques')]", "ссылка на чеки"),
-                        ("//a[contains(normalize-space(.), 'Чеки')]", "ссылка 'Чеки'"),
-                        ("//button[contains(normalize-space(.), 'Чеки')]", "кнопка 'Чеки'"),
-                    ]
-                    clicked = False
-                    for xpath, desc in go_to_cheques_candidates:
-                        if driver.find_elements(By.XPATH, xpath):
-                            safe_click(driver, xpath, desc)
-                            clicked = True
-                            break
-
-                    if not clicked:
-                        logger.warning("Кнопка/ссылка 'Чеки' не найдена, пробуем открыть страницу вручную")
-                        driver.get(f"{url}/web/auth/cheques/search")
-
-                    try:
-                        WebDriverWait(driver, 60).until(
-                            lambda d: d.current_url.startswith(f"{url}/web/auth/cheques/search")
-                        )
-                    except TimeoutException:
-                        logger.warning(f"Не удалось открыть страницу чеков, URL: {driver.current_url}")
+                    logger.warning(f"Не удалось открыть страницу чеков, URL: {driver.current_url}")
 
             time_filter_candidates = [
                 ("//a[contains(normalize-space(.), '3 часа')]", "ссылка '3 часа'"),
