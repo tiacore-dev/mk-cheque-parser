@@ -40,12 +40,28 @@ def login_to_platform(url, username, password, driver):
         logger.exception(f"❌ Ошибка при вводе логина/пароля: {e}")
         raise
 
-    logger.info("⏳ Ожидание перехода на дашборд")
+    logger.info("⏳ Ожидание перехода после авторизации")
     try:
-        wait.until(lambda d: d.current_url.startswith(f"{url}/web/auth/dashboard"))
+        post_login_wait = WebDriverWait(driver, timeout=120)
+
+        def _logged_in(d):
+            current_url = d.current_url or ""
+            if current_url.startswith(f"{url}/web/auth/dashboard"):
+                return True
+            if current_url.startswith(f"{url}/web/auth/cheques"):
+                return True
+            if current_url.startswith(f"{url}/web/") and "login" not in current_url:
+                return True
+            if not d.find_elements(By.NAME, "username") and not d.find_elements(By.NAME, "password"):
+                return True
+            return False
+
+        post_login_wait.until(_logged_in)
         logger.info(f"✅ Успешный вход. Текущий URL: {driver.current_url}")
         logger.info(f"🪧 Заголовок страницы: {driver.title}")
     except Exception as e:
+        logger.error(f"❌ Текущий URL при ошибке: {driver.current_url}")
+        logger.error(f"🪧 Заголовок страницы при ошибке: {driver.title}")
         logger.exception(f"❌ Не дождались перехода на дашборд: {e}")
         raise
 
