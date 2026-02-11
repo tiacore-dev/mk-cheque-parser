@@ -46,13 +46,15 @@ def login_to_platform(url, username, password, driver):
 
         def _logged_in(d):
             current_url = d.current_url or ""
-            if current_url.startswith(f"{url}/web/auth/dashboard"):
-                return True
-            if current_url.startswith(f"{url}/web/auth/cheques"):
+            if current_url.startswith(f"{url}/web/auth/"):
                 return True
             if current_url.startswith(f"{url}/web/") and "login" not in current_url:
+                if "sso-login" in current_url:
+                    return False
                 return True
             if not d.find_elements(By.NAME, "username") and not d.find_elements(By.NAME, "password"):
+                if "sso-login" in current_url:
+                    return False
                 return True
             return False
 

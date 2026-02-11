@@ -55,12 +55,37 @@ async def fetch_all_cheques(driver, url, parse_metod: ParseMethod, filters: Opti
         case ParseMethod.STANDARD:
             driver.get(f"{url}/web/auth/cheques/search")
 
-            safe_click(driver, "//a[contains(text(), '3 часа')]", "кнопка '3 часа'")
+            try:
+                WebDriverWait(driver, 60).until(
+                    lambda d: d.current_url.startswith(f"{url}/web/auth/cheques/search")
+                )
+            except TimeoutException:
+                logger.warning(f"Не дождались открытия страницы чеков, URL: {driver.current_url}")
+
+            time_filter_candidates = [
+                ("//a[contains(normalize-space(.), '3 часа')]", "ссылка '3 часа'"),
+                ("//button[contains(normalize-space(.), '3 часа')]", "кнопка '3 часа'"),
+                ("//a[contains(normalize-space(.), '3 ч')]", "ссылка '3 ч'"),
+                ("//button[contains(normalize-space(.), '3 ч')]", "кнопка '3 ч'"),
+            ]
+
+            clicked_time_filter = False
+            for xpath, desc in time_filter_candidates:
+                if driver.find_elements(By.XPATH, xpath):
+                    safe_click(driver, xpath, desc)
+                    clicked_time_filter = True
+                    break
+
+            if not clicked_time_filter:
+                logger.warning("Фильтр '3 часа' не найден, продолжаем без выбора периода")
 
             logger.info(f"Текущий URL: {driver.current_url}")
             logger.info(f"Заголовок страницы: {driver.title}")
             time.sleep(0.5)
-            safe_click(driver, "//button[contains(text(), 'Применить')]", "кнопка 'Применить'")
+            try:
+                safe_click(driver, "//button[contains(text(), 'Применить')]", "кнопка 'Применить'")
+            except Exception as e:
+                logger.warning(f"Не удалось нажать 'Применить', продолжаем: {e}")
 
     logger.info(f"Текущий URL: {driver.current_url}")
     logger.info(f"Заголовок страницы: {driver.title}")
