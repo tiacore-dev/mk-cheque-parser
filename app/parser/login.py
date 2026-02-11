@@ -13,7 +13,7 @@ def login_to_platform(url, username, password, driver):
         logger.exception(f"❌ Ошибка при открытии {url}: {e}")
         raise
 
-    wait = WebDriverWait(driver, timeout=30)
+    wait = WebDriverWait(driver, timeout=60)
 
     logger.info("🔗 Ожидание кнопки 'Войти'")
     try:
