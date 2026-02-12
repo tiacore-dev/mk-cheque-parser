@@ -41,10 +41,27 @@ async def fetch_all_cheques(driver, url, parse_metod: ParseMethod, filters: Opti
             logger.info(f"Переходим на страницу поиска чеков: {search_url}")
             driver.get(search_url)
 
+            # Для веб-ветки после логина можем попасть в wizard.
+            # В этом случае принудительно открываем страницу чеков и заново задаем URL с фильтрами.
+            if "/web/auth/wizard" in driver.current_url:
+                logger.info("Обнаружен мастер подключений, переходим на страницу чеков напрямую")
+                driver.get(f"{url}/web/auth/cheques/search#top")
+                try:
+                    WebDriverWait(driver, 60).until(
+                        lambda d: d.current_url.startswith(f"{url}/web/auth/cheques/search")
+                    )
+                except TimeoutException:
+                    logger.warning(f"Не удалось открыть страницу чеков, URL: {driver.current_url}")
+                logger.info("Повторно открываем страницу поиска чеков с фильтрами")
+                driver.get(search_url)
+
             # 3) Жмём «Применить», чтобы гарантированно обновить выдачу
             apply_btn_xpath = "//button[contains(text(), 'Применить')]"
-            wait.until(EC.element_to_be_clickable((By.XPATH, apply_btn_xpath))).click()
-            logger.info("Нажали 'Применить'")
+            try:
+                wait.until(EC.element_to_be_clickable((By.XPATH, apply_btn_xpath))).click()
+                logger.info("Нажали 'Применить'")
+            except TimeoutException:
+                logger.warning("Кнопка 'Применить' не найдена, продолжаем без нажатия")
 
             # 4) Ждём, пока пропадёт спиннер
             try:
