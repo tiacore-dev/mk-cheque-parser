@@ -37,31 +37,53 @@ async def fetch_all_cheques(driver, url, parse_metod: ParseMethod, filters: Opti
             logger.info("Переходим на страницу поиска чеков")
             # 1) Строим URL с нужными датами
 
-            search_url = build_cheques_search_url(url, filters.date_from, filters.date_to, device_id=filters.device_id)  # type: ignore
+            device_id = filters.device_id or "Все терминалы"  # type: ignore[union-attr]
+            search_url = build_cheques_search_url(url, filters.date_from, filters.date_to, device_id=device_id)  # type: ignore
+
+            # Веб-ветка нестабильно редиректит в wizard, поэтому сначала открываем
+            # базовую страницу чеков, затем URL с фильтрами.
+            logger.info(f"Открываем страницу чеков напрямую: {url}/web/auth/cheques/search#top")
+            driver.get(f"{url}/web/auth/cheques/search#top")
+            try:
+                WebDriverWait(driver, 90).until(
+                    lambda d: d.current_url.startswith(f"{url}/web/auth/cheques/search")
+                    or "/web/auth/wizard" in (d.current_url or "")
+                )
+            except TimeoutException:
+                logger.warning(f"Не дождались открытия страницы чеков, URL: {driver.current_url}")
+
             logger.info(f"Переходим на страницу поиска чеков: {search_url}")
             driver.get(search_url)
 
-            # Для веб-ветки после логина можем попасть в wizard.
-            # В этом случае принудительно открываем страницу чеков и заново задаем URL с фильтрами.
-            if "/web/auth/wizard" in driver.current_url:
-                logger.info("Обнаружен мастер подключений, переходим на страницу чеков напрямую")
-                driver.get(f"{url}/web/auth/cheques/search#top")
-                try:
-                    WebDriverWait(driver, 60).until(
-                        lambda d: d.current_url.startswith(f"{url}/web/auth/cheques/search")
-                    )
-                except TimeoutException:
-                    logger.warning(f"Не удалось открыть страницу чеков, URL: {driver.current_url}")
-                logger.info("Повторно открываем страницу поиска чеков с фильтрами")
-                driver.get(search_url)
+            # 3) Жмём «Применить», чтобы гарантированно обновить выдачу.
+            # Если уводит в wizard, повторяем прямой переход + открытие search_url.
+            apply_clicked = False
+            for attempt in range(1, 4):
+                current_url = driver.current_url or ""
+                if "/web/auth/wizard" in current_url:
+                    logger.warning(f"Попали в мастер подключений (попытка {attempt}), повторяем переход на чеки")
+                    driver.get(f"{url}/web/auth/cheques/search#top")
+                    try:
+                        WebDriverWait(driver, 90).until(
+                            lambda d: d.current_url.startswith(f"{url}/web/auth/cheques/search")
+                        )
+                    except TimeoutException:
+                        logger.warning(f"Не удалось открыть страницу чеков, URL: {driver.current_url}")
+                    driver.get(search_url)
 
-            # 3) Жмём «Применить», чтобы гарантированно обновить выдачу
-            apply_btn_xpath = "//button[contains(text(), 'Применить')]"
-            try:
-                wait.until(EC.element_to_be_clickable((By.XPATH, apply_btn_xpath))).click()
-                logger.info("Нажали 'Применить'")
-            except TimeoutException:
-                logger.warning("Кнопка 'Применить' не найдена, продолжаем без нажатия")
+                try:
+                    apply_btn = WebDriverWait(driver, 90).until(
+                        EC.element_to_be_clickable((By.CSS_SELECTOR, "button.js__search-mobile-btn"))
+                    )
+                    apply_btn.click()
+                    apply_clicked = True
+                    logger.info("Нажали 'Применить'")
+                    break
+                except TimeoutException:
+                    logger.warning(f"Кнопка 'Применить' не найдена (попытка {attempt})")
+
+            if not apply_clicked:
+                logger.warning("Не удалось нажать 'Применить' после повторов, продолжаем без нажатия")
 
             # 4) Ждём, пока пропадёт спиннер
             try:
